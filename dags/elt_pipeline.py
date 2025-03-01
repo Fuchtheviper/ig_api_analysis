@@ -37,7 +37,7 @@ fetch_task = PythonOperator(
 extract_task = PythonOperator(
     task_id="extract_insights",
     python_callable=extract_insights,
-    op_kwargs={"items": "{{ ti.xcom_pull(task_ids='fetch_data') }}"},
+    op_kwargs={"file_path": "{{ ti.xcom_pull(task_ids='fetch_data') }}"},
     dag=dag,
 )
 
@@ -45,7 +45,7 @@ extract_task = PythonOperator(
 save_raw_task = PythonOperator(
     task_id="save_raw_to_mongo",
     python_callable=save_raw_to_mongo,
-    op_kwargs={"all_insights": "{{ ti.xcom_pull(task_ids='extract_insights') }}"},
+    op_kwargs={"file_path": "{{ ti.xcom_pull(task_ids='extract_insights') }}"},
     dag=dag,
 )
 
