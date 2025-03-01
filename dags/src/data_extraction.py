@@ -2,44 +2,26 @@ import re
 import yaml
 import logging
 import json
+import os
 
 with open("config/config.yaml", "r", encoding="utf-8") as config_file:
     config = yaml.safe_load(config_file)
 
 # Function to Extract Insights
-def extract_insights(items):
-    # ✅ Debugging: Log raw data before parsing
-    logging.info(f"Raw `items` before parsing: {repr(items)}")
-    
-    # ✅ Handle empty values before parsing
-    if not items or items in ["null", "None", ""]:
-        logging.error("Received empty or None value for `items`.")
-        return []
-    
-    # ✅ If `items` is a string, convert it to a list
-    if isinstance(items, str):
-        try:
-            # ✅ Ensure proper JSON format by replacing single quotes with double quotes
-            if items.startswith("'") or items.startswith("[{"):
-                items = items.replace("'", '"')
-            items = json.loads(items)  # ✅ Convert JSON string to Python list
-        except json.JSONDecodeError as e:
-            logging.error(f"JSON Decode Error: {e}")
-            return []  # ✅ Return an empty list to prevent failure
+def extract_insights(file_path):
+    """Reads hashtag data from file and extracts insights."""
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            all_items = json.load(f)
+    except Exception as e:
+        logging.error(f"Error loading JSON file: {e}")
+        return None  # Return None if file reading fails
 
-    # ✅ Ensure `items` is a list before proceeding
-    if not isinstance(items, list):
-        logging.error(f"Expected a list but got {type(items).__name__}")
-        return []
-    
     all_insights = []
-    for item in items:
+    for item in all_items:
         try:
-            if not isinstance(item, dict):
-                logging.warning(f"Skipping item: Expected dict, got {type(item).__name__}")
-                continue
-
             caption_text = item.get("caption", {}).get("text", "").lower()
+            logging.info(f"Caption Length {len(caption_text)} characters")
             
             # Extract hashtags from text using regex
             hashtags = re.findall(r"#(\w+)", caption_text)
@@ -69,4 +51,17 @@ def extract_insights(items):
             })
         except Exception as e:
             logging.error(f"Error in extracting insights: {str(e)}")
-    return all_insights
+    logging.info(f"Post insight amount {len(all_insights)} post")
+
+    # ✅ Save Extracted Insights to a JSON File
+    temp_file = "/opt/airflow/tmp/extracted_insights.json"  # ✅ File path for saving extracted data
+    os.makedirs(os.path.dirname(temp_file), exist_ok=True)
+
+    try:
+        with open(temp_file, "w", encoding="utf-8") as f:
+            json.dump(all_insights, f, ensure_ascii=False)
+    except Exception as e:
+        logging.error(f"Failed to write extracted insights JSON file: {e}")
+        return None
+
+    return temp_file  # ✅ Return file path instead of large JSON
