@@ -1,0 +1,54 @@
+version: '3'
+
+services:
+  local-airflow:
+    build:
+      context: .
+    image: ig-analysis:latest  # Ensure this image is built correctly
+    container_name: airflow-container
+    restart: always
+    environment:
+      - DOCKER_ENV=true
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False  # Disable example DAGs
+      - AIRFLOW__CORE__EXECUTOR=SequentialExecutor  # Local execution mode
+      - MONGO_URI=mongodb://local-mongo:27017/  # Correct MongoDB service name
+      - PYTHONPATH=/opt/airflow/src:/opt/airflow/dags
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./src:/opt/airflow/src
+      - ./config:/opt/airflow/config
+      - local-airflow:/opt/airflow  # Ensure volume is mounted
+    ports:
+      - "8080:8080"
+    command: airflow standalone
+    depends_on:
+      - local-mongo  # Fix: Match the MongoDB service name
+  
+  airflow-scheduler:  # ✅ Added Airflow Scheduler Service
+    image: ig-analysis:latest
+    container_name: airflow-scheduler
+    restart: always
+    environment:
+      - PYTHONPATH=/opt/airflow/src:/opt/airflow/dags
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./src:/opt/airflow/src
+      - ./config:/opt/airflow/config
+    command: airflow scheduler
+    depends_on:
+      - local-airflow
+
+  local-mongo:
+    image: mongo:latest
+    container_name: mongodb-container
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - local-mongo:/data/db  # Ensure persistent storage for MongoDB
+    command: mongod --bind_ip_all
+
+volumes:
+  local-airflow:  # Make sure this volume exists
+  local-mongo:  # Persistent MongoDB storage
+    driver: local
