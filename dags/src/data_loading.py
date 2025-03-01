@@ -3,6 +3,7 @@ import logging
 from pymongo.errors import BulkWriteError
 import yaml
 import pandas as pd
+import json
 
 with open("config/config.yaml", "r", encoding="utf-8") as config_file:
     config = yaml.safe_load(config_file)
@@ -16,20 +17,25 @@ client = MongoClient(MONGO_URI)
 db = client[DB_NAME]
 collection = db[COLLECTION_NAME]
 
-def save_raw_to_mongo(all_insights):
+def save_raw_to_mongo(file_path):
     """
-    Saves raw data to MongoDB without using `bulk_write()`, using `update_one()` for each record.
+    Loads extracted insights from a JSON file and saves them to MongoDB.
     """
     try:
-        all_data = [post for insights in all_insights.values() for post in insights]
+        # ✅ Read extracted insights from the JSON file
+        with open(file_path, "r", encoding="utf-8") as f:
+            all_insights = json.load(f)  # ✅ Convert JSON string into a Python dictionary
 
-        for doc in all_data:
+        if not isinstance(all_insights, list):  # ✅ Ensure it's a list of posts
+            logging.error(f"Expected list but got {type(all_insights).__name__}")
+            return None
+
+        logging.info(f"Loaded {len(all_insights)} insights from file.")
+
+        # ✅ Upsert data into MongoDB
+        for doc in all_insights:
             doc.pop("_id", None)  # Remove `_id` to prevent conflicts
-
-        logging.info(f"Attempting to insert {len(all_data)} documents into MongoDB.")
-
-        for doc in all_data:
-            filter_query = {"id": doc["id"]}  # Ensure uniqueness based on 'id'
+            filter_query = {"id": doc.get("id")}  # Ensure uniqueness
             update_query = {"$set": doc}
             collection.update_one(filter_query, update_query, upsert=True)
 
@@ -38,18 +44,18 @@ def save_raw_to_mongo(all_insights):
     except BulkWriteError as bwe:
         logging.error("Bulk write error occurred during update operation.")
         logging.error(bwe.details)
-        raise  # Ensure the error is raised for debugging
+        raise  # Raise for debugging
 
     except Exception as e:
         logging.error(f"Error saving to MongoDB: {str(e)}")
-        raise  # Raise error for visibility
+        raise  # Raise for debugging
 
 
 # Function to load data from mongoDB
 def load_raw_data_from_mongo():
     # Load Data from MongoDB
     data = list(collection.find({}, {"text": 1}))
-    df = pd.DataFrame(data)
+    df = pd.DataFrame(data).drop(columns=["_id"], errors="ignore")
     return df
 
 # Function to Save Sentiment Analysis Results
