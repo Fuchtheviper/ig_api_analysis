@@ -1,6 +1,5 @@
 from openai import OpenAI
 import yaml
-import os
 import time
 import logging
 import pandas as pd
@@ -44,33 +43,3 @@ def get_topic_with_deepseek(text):
     except Exception as e:
         print(f"Error calling DeepSeek: {e}")
         return "Unknown"  # Default fallback in case of errors
-        
-# Optimized Batch Topic Analysis
-def batch_topic_analysis(df, batch_size=10):
-    """Processes topic analysis in batches for efficiency."""
-
-    # ✅ Ensure `df` is a valid Pandas DataFrame
-    if not isinstance(df, pd.DataFrame):
-        logging.error(f"Expected DataFrame but got {type(df).__name__}")
-        return df  # Return unchanged DataFrame
-    
-    if df.empty:
-        logging.warning("DataFrame is empty. No topics to analyze.")
-        return df
-
-    num_batches = (len(df) // batch_size) + 1
-
-    for i in range(num_batches):
-        start_idx = i * batch_size
-        end_idx = min((i + 1) * batch_size, len(df))
-
-        # ✅ Only process non-empty slices
-        if start_idx < end_idx:
-            batch = df.loc[start_idx:end_idx, "clean_text"]
-            if not batch.empty:
-                df.loc[start_idx:end_idx, "topic"] = batch.apply(get_topic_with_deepseek)
-                logging.info(f"Processed batch {i+1}/{num_batches}")
-            else:
-                logging.warning(f"Batch {i+1} is empty. Skipping.")
-
-    return df
