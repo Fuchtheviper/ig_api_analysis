@@ -21,12 +21,13 @@ def get_sentiment_with_chatgpt(text):
         response = openai.chat.completions.create(
             model="gpt-3.5-turbo-1106",
             messages=[
-                {"role": "system", "content": "You are a sentiment analysis assistant. Classify the sentiment of the given text."},
+                {"role": "system", "content": "You are a sentiment analysis assistant. Classify the sentiment of the given text. Return only Positive, Negative, Neutral"},
                 {"role": "user", "content": f"Classify this Instagram caption into one of these categories: Positive, Negative, Neutral:\n\n{text}"}
             ],
-            temperature=0.1  # Low temperature for deterministic response
+            temperature=0  # Low temperature for deterministic response
         )
         sentiment_response = response.choices[0].message.content
+        logging.info(f"Sentiment :{sentiment_response}")
         return extract_sentiment(sentiment_response)  # Ensure response is valid
     except Exception as e:
         logging.error(f"Error calling OpenAI API: {e}")
@@ -36,6 +37,10 @@ def get_sentiment_with_chatgpt(text):
 def extract_sentiment(text):
     # Define the list of sentiment words to look for.
     sentiments = ["Positive", "Negative", "Neutral"]
+    # ✅ Handle None or empty text before applying `.lower()`
+    if not text:
+        logging.warning("Received None or empty text for sentiment analysis.")
+        return "Neutral"  # ✅ Default to "Neutral" for missing values
     
     # Convert the input text to lowercase for case-insensitive comparison.
     lower_text = text.lower()
