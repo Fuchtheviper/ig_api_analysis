@@ -1,10 +1,6 @@
-import re
 import yaml
 import logging
-import ollama
-import time
 import openai
-from googletrans import Translator
 
 with open("config/config.yaml", "r", encoding="utf-8") as config_file:
     config = yaml.safe_load(config_file)
