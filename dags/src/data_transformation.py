@@ -1,13 +1,8 @@
 import re
-import yaml
 import logging
 import os
 import json
-import ollama
-import time
-import openai
 import pandas as pd
-from googletrans import Translator
 from src.sentiment_analysis import extract_sentiment, get_sentiment_with_chatgpt
 from src.topic_analysis import get_topic_with_deepseek
 
@@ -43,27 +38,6 @@ def clean_emoji_and_long_text(text):
 
     # Check if text exceeds length limit
     return text if len(text) <= 50 else "Unknown"
-
-# Function to Translate Non-English Topics
-def translate_topic(text):
-    """
-    Translates topic to English only if detected language is not English.
-    """
-    translator = Translator()
-    try:
-        if not isinstance(text, str) or text.strip() == "":
-            return "Unknown"  # ✅ Ensure non-empty string is returned
-        
-        detected_lang = translator.detect(text).lang
-        if detected_lang == "en":
-            return text  # Skip translation if already in English
-        
-        translated_text = translator.translate(text, dest="en").text
-        return translated_text if translated_text else "Unknown"  # ✅ Handle empty translations
-
-    except Exception as e:
-        logging.error(f"Translation Error: {e}")
-        return "Translation Error"  # ✅ Ensure fallback value is a string
     
 # Function to Process DataFrame for Sentiment & Topic Analysis
 def process_data_for_analysis(file_path):
