@@ -1,8 +1,6 @@
 import logging
-import time
 import requests
 import yaml
-import sys
 import json
 import os
 
