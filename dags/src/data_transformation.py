@@ -1,12 +1,15 @@
 import re
 import yaml
 import logging
+import os
+import json
 import ollama
 import time
 import openai
 import pandas as pd
 from googletrans import Translator
-from src.sentiment_analysis import extract_sentiment
+from src.sentiment_analysis import extract_sentiment, get_sentiment_with_chatgpt
+from src.topic_analysis import get_topic_with_deepseek
 
 # Function to Clean Text (Remove URLs, Hashtags, Mentions)
 def clean_text(text):
@@ -63,13 +66,41 @@ def translate_topic(text):
         return "Translation Error"  # ✅ Ensure fallback value is a string
     
 # Function to Process DataFrame for Sentiment & Topic Analysis
-def process_data_for_analysis(df):
-    """
-    Cleans text, extracts sentiment, and classifies topics for analysis.
-    """
+def process_data_for_analysis(file_path):
+    """Reads extracted insights from file, processes data, and saves processed results to another temp file."""
+    
+    try:
+        # ✅ Read extracted insights from JSON file
+        with open(file_path, "r", encoding="utf-8") as f:
+            extracted_insights = json.load(f)
+    except Exception as e:
+        logging.error(f"Error loading JSON file: {e}")
+        return None  # ✅ Ensure Airflow does not fail
+
+    # ✅ Convert list to DataFrame for processing
+    df = pd.DataFrame(extracted_insights)
+
+    # ✅ Ensure required columns exist
+    if "text" not in df.columns:
+        logging.error("Column 'text' not found in DataFrame.")
+        return None
+    
     df["clean_text"] = df["text"].apply(clean_text)
-    df["sentiment"] = df["sentiment"].apply(extract_sentiment)
+    df["topic"] = df["clean_text"].apply(get_topic_with_deepseek)
     df["topic"] = df["topic"].apply(clean_emoji_and_long_text)
+    df["sentiment"] = df["clean_text"].apply(get_sentiment_with_chatgpt)
+    df["sentiment"] = df["sentiment"].apply(extract_sentiment)
     #df["topic"] = df["topic"].apply(translate_topic)
     
-    return df  # Return transformed DataFrame
+# ✅ Save Processed Data to a Temporary JSON File
+    processed_file_path = "/opt/airflow/tmp/processed_data.json"  # ✅ File path for processed data
+    os.makedirs(os.path.dirname(processed_file_path), exist_ok=True)
+
+    try:
+        with open(processed_file_path, "w", encoding="utf-8") as f:
+            json.dump(df.to_dict(orient="records"), f, ensure_ascii=False)
+    except Exception as e:
+        logging.error(f"Failed to write processed insights JSON file: {e}")
+        return None
+
+    return processed_file_path  # ✅ Return file path instead of large JSON
