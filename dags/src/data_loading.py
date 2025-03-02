@@ -1,4 +1,4 @@
-from pymongo import MongoClient, UpdateOne, errors
+from pymongo import MongoClient
 import logging
 from pymongo.errors import BulkWriteError
 import yaml
