@@ -35,7 +35,7 @@ def get_topic_with_deepseek(text):
         
         # Extract the topic from the response
         if response.choices and len(response.choices) > 0:
-            logging.info(f"Topic :{response}")
+            logging.info(f"Topic :{response.choices[0].message.content.strip()}")
             return response.choices[0].message.content.strip()
         else:
             return "Unknown"
