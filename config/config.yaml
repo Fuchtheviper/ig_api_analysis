@@ -1,0 +1,45 @@
+# API Configuration
+INSTAGRAM_API_URL: "https://instagram-scraper-api2.p.rapidapi.com/v1/hashtag"
+RAPIDAPI_KEY: "ed89c7ebabmsh9892f3112b5a163p18817bjsn20cd92ffbe04"
+RAPIDAPI_HOST: "instagram-scraper-api2.p.rapidapi.com"
+
+# MongoDB Configuration
+MONGO_URI: "mongodb://host.docker.internal:27017/"
+DB_NAME: "instagram_data"
+COLLECTION_NAME: "posts"
+
+# Hashtags to Fetch from Instagram
+HASHTAGS: ["thailand", "bangkok","ไทย", "กรุงเทพ", "bkk", "bangkokcity", "thai", "bangkokthailand", "amazingthailand", "y2kthailand","thailandtravel"] # Can add other Hashtag
+
+# OpenAI API Configuration
+OPENAI_API_KEY: "YOUR_CHATGPT_API_KEY"
+OPENAI_MODEL: "gpt-3.5-turbo-1106" # Change model if needed
+DEEPSEEK_API_KEY: "YOUR_DEEPSEEK_API_KEY"
+
+
+# DeepSeek AI Configuration
+DEESEEK_MODEL: "deepseek-v2:16b"
+
+# Processing Settings
+BATCH_SIZE: 10  # Number of rows to process per batch
+TEXT_CLEANING:
+  REMOVE_URLS: true
+  REMOVE_HASHTAGS: true
+  REMOVE_MENTIONS: true
+TOPIC_PROCESSING:
+  REMOVE_EMOJIS: true
+  MAX_TOPIC_LENGTH: 50
+TRANSLATION:
+  ENABLED: true
+  TARGET_LANGUAGE: "en"
+
+# Logging Configuration
+LOGGING:
+  LEVEL: "INFO"
+  FILE_PATH: "logs/etl_pipeline.log"
+
+# Airflow DAG Configuration
+DAG_CONFIG:
+  SCHEDULE_INTERVAL: "@daily"
+  RETRIES: 1
+  RETRY_DELAY_MINUTES: 5
