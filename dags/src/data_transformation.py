@@ -16,6 +16,7 @@ def clean_text(text):
     text = re.sub(r"@\w+", "", text)  # Remove mentions
     return text.strip()
 
+# Function to Clean topic (Remove emoji and long text)
 def clean_emoji_and_long_text(text):
     """
     Removes emojis from text and ensures the topic is not longer than 50 characters.
@@ -41,7 +42,9 @@ def clean_emoji_and_long_text(text):
     
 # Function to Process DataFrame for Sentiment & Topic Analysis
 def process_data_for_analysis(file_path):
-    """Reads extracted insights from file, processes data, and saves processed results to another temp file."""
+    """
+    Reads extracted insights from file, processes data, and saves processed results to another temp file.
+    """
     
     try:
         # ✅ Read extracted insights from JSON file
@@ -64,7 +67,6 @@ def process_data_for_analysis(file_path):
     df["topic"] = df["topic"].apply(clean_emoji_and_long_text)
     df["sentiment"] = df["clean_text"].apply(get_sentiment_with_chatgpt)
     df["sentiment"] = df["sentiment"].apply(extract_sentiment)
-    #df["topic"] = df["topic"].apply(translate_topic)
     
 # ✅ Save Processed Data to a Temporary JSON File
     processed_file_path = "/opt/airflow/tmp/processed_data.json"  # ✅ File path for processed data
