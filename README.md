@@ -1,10 +1,6 @@
 # 📷 Instagram ETL Data Pipeline
 🚀 **An end-to-end data pipeline for extracting, analyzing, and storing Instagram hashtag data using Airflow, MongoDB, and DeepSeek API.**
 
-![Instagram ETL Pipeline](https://your-image-url.com) <!-- Replace with an actual image or workflow diagram -->
-
----
-
 ## 📌 Project Overview
 This project automates **data extraction, sentiment analysis, and topic classification** from Instagram hashtags. It is **built on Airflow** and **designed for scalability** using **Docker & MongoDB**.
 
